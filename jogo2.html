@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Desafio Financeiro: Orçamento e Decisão</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f6;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            text-align: center;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 800px;
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+            transition: all 0.5s ease-in-out;
+        }
+
+        h1 {
+            color: #007bff;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        h2 {
+            color: #28a745;
+            border-bottom: 2px solid #28a745;
+            padding-bottom: 5px;
+            margin-top: 20px;
+        }
+
+        p {
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+
+        /* Classes para controlo de visualização */
+        .page {
+            display: none; 
+        }
+
+        .cover-page {
+            display: block; /* Garante que a capa é a única visível ao carregar */
+        }
+
+        .decision-block {
+            margin-bottom: 25px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            text-align: left;
+        }
+
+        .options label {
+            display: block;
+            background-color: #e9ecef;
+            padding: 10px;
+            margin: 8px 0;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .options label:hover {
+            background-color: #dee2e6;
+        }
+        
+        .options input[type="radio"] {
+            margin-right: 10px;
+        }
+
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1.1em;
+            transition: background-color 0.3s;
+            margin-top: 20px;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        #timer {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #dc3545;
+            margin-bottom: 15px;
+        }
+
+        /* Estilo para a pontuação final */
+        #final-score {
+            font-size: 2em;
+            color: #28a745;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <div id="cover" class="page cover-page">
+        <h1>Desafio Financeiro: Orçamento e Decisão</h1>
+        <p>Literacia Financeira - 12.º Ano de Economia</p>
+        <hr>
+        <h2>Apresentação do Jogo</h2>
+        <p>Bem-vindo(a) ao **Desafio Financeiro**, uma simulação interativa onde as suas decisões moldam o seu futuro financeiro. Este jogo tem como objetivo testar e aprofundar os seus conhecimentos sobre **planeamento e gestão de orçamento pessoal** no contexto económico português.</p>
+        
+        <h2>O Cenário</h2>
+        <p>Acabou de concluir o seu curso superior e iniciou a sua vida profissional em Lisboa. O seu **Rendimento Mensal Líquido (RML) é de 1350€**. Terá de tomar **8 decisões cruciais** sobre despesas, poupança e investimento ao longo de 6 meses. O seu objetivo é alcançar o **melhor balanço financeiro** (maior pontuação) no **menor tempo possível**.</p>
+        
+        <h2>Regras de Pontuação (Simplificada)</h2>
+        <ul>
+            <li>**Pontuação por Decisão:** Cada decisão é avaliada. A opção mais informada e economicamente racional ganha mais pontos.</li>
+            <li>**Fator Tempo:** O tempo que demora a completar o jogo influenciará a sua pontuação final (quanto mais rápido, melhor).</li>
+            <li>**Vitória:** Ganha o grupo/aluno com a **Soma das Melhores Decisões** (Pontos Totais) e o **Menor Tempo de Jogo**.</li>
+        </ul>
+
+        <button onclick="startGame()">Iniciar o Desafio</button>
+    </div>
+
+    <div id="game" class="page">
+        <h2>A Sua Jornada Financeira</h2>
+        <div id="timer">Tempo de Jogo: 00:00</div>
+        <div id="current-decision"></div>
+        <button id="next-button" onclick="nextDecision()" disabled>Próxima Decisão</button>
+    </div>
+
+    <div id="results" class="page">
+        <h1>Resultados Finais</h1>
+        <p>Parabéns! Concluiu o Desafio Financeiro.</p>
+        <hr>
+        <p>Tempo Total de Jogo: <span id="time-result"></span></p>
+        <p>Pontuação Total de Decisões: <span id="score-result"></span></p>
+        <p id="final-score"></p>
+        
+        <h2>Análise e Reflexão</h2>
+        <p>A sua classificação final será determinada pela combinação da sua pontuação e do tempo. Compare os seus resultados com os seus colegas e analise as suas escolhas!</p>
+    </div>
+
+</div>
+
+<script>
+    // Variáveis Globais
+    let startTime;
+    let timerInterval;
+    let currentStep = 0;
+    let totalScore = 0;
+    const NUM_DECISIONS = 8;
+
+    // Estrutura das 8 Decisões do Jogo
+    const decisions = [
+        // Decisão 1: Habitação (a primeira e maior despesa)
+        {
+            title: "Decisão 1/8: A Habitação - Onde Viver?",
+            scenario: "Com RML de 1350€, precisa de escolher onde viver em Lisboa. Os especialistas recomendam não gastar mais de 35% do RML em habitação (máx. 472.50€).",
+            options: [
+                { text: "A: Arrendar um T0 no centro de Lisboa por 650€/mês.", score: 0, feedback: "Risco Elevado: Este valor excede largamente o limite recomendado (35%), comprometendo seriamente o seu orçamento e poupança." },
+                { text: "B: Arrendar um quarto em apartamento partilhado (zona central) por 350€/mês.", score: 10, feedback: "Opção Ótima: Fica dentro do limite e permite-lhe uma poupança significativa, embora exija partilha." },
+                { text: "C: Pedir um empréstimo bancário para comprar um T1 a 150.000€, com prestação mensal de 550€.", score: 5, feedback: "Opção de Risco Médio: A prestação excede o limite dos 35%, além dos custos iniciais de entrada, impostos e seguros. É uma despesa elevada para um primeiro emprego." }
+            ],
+            correct_score: 10
+        },
+        // Decisão 2: Transporte
+        {
+            title: "Decisão 2/8: Transporte - Como se Deslocar?",
+            scenario: "O seu local de trabalho é bem servido de transportes públicos. Precisa de decidir sobre o seu meio de transporte.",
+            options: [
+                { text: "A: Comprar um carro a diesel (15.000€) com um crédito automóvel de 250€/mês + 100€ de combustível.", score: 0, feedback: "Opção Ineficaz: Compromete um valor significativo do seu orçamento mensal (350€) em crédito e combustível, sendo desnecessário numa zona bem servida." },
+                { text: "B: Comprar um Passe Navegante Metropolitano por 40€/mês.", score: 10, feedback: "Opção Ótima: Solução mais económica e sustentável para Lisboa, maximizando a sua margem orçamental." },
+                { text: "C: Usar TVDE/Táxi diariamente para o trabalho, gastando cerca de 150€/mês.", score: 5, feedback: "Opção de Risco Médio: Embora cómodo, é 3 vezes mais caro que o passe mensal, sendo um luxo que impacta a poupança." }
+            ],
+            correct_score: 10
+        },
+        // Decisão 3: Reserva de Emergência
+        {
+            title: "Decisão 3/8: Reserva de Emergência - Quanto Poupar?",
+            scenario: "Os especialistas recomendam ter uma Reserva de Emergência de 6 a 12 meses de despesas. Precisa de definir uma meta de poupança mensal nos primeiros 6 meses.",
+            options: [
+                { text: "A: Poupar 50€/mês no seu ordenado para despesas de lazer.", score: 0, feedback: "Decisão Fraca: Valor insuficiente e não destinado a emergências. A Reserva de Emergência deve ser uma prioridade e separada do lazer." },
+                { text: "B: Poupar 200€/mês (cerca de 15% do RML) numa conta a prazo com baixo risco.", score: 10, feedback: "Opção Ótima: Uma percentagem sólida (cerca de 15%) dedicada a uma reserva de emergência, garantindo segurança financeira para imprevistos." },
+                { text: "C: Não poupar nos primeiros 6 meses, 'porque não tem grandes despesas' e decide poupar mais tarde.", score: 0, feedback: "Risco Elevado: A falta de uma reserva de emergência torna-o vulnerável a qualquer imprevisto financeiro." }
+            ],
+            correct_score: 10
+        },
+        // Decisão 4: Dívida (Crédito)
+        {
+            title: "Decisão 4/8: Gestão de Dívida - Crédito ao Consumo?",
+            scenario: "O seu computador avariou. Precisa de um novo. Deve comprar um novo computador (1000€) a crédito ou com o seu dinheiro?",
+            options: [
+                { text: "A: Usar 1000€ que recebeu como 'bónus' de entrada para comprar a pronto e evitar juros.", score: 10, feedback: "Opção Ótima: Evita juros desnecessários. A compra a pronto é quase sempre a melhor solução para bens de consumo." },
+                { text: "B: Fazer um crédito ao consumo de 1000€, a 24 meses, com TAN de 12% (prestação de cerca de 47€/mês).", score: 5, feedback: "Opção Ineficaz: Embora a prestação pareça baixa, estará a pagar juros por um bem que não se valoriza. É um custo desnecessário." },
+                { text: "C: Comprar um usado ou recondicionado de 500€ a pronto e poupar o resto.", score: 8, feedback: "Boa Opção: Uma excelente forma de reduzir o custo e preservar a liquidez, focando-se em necessidades essenciais." }
+            ],
+            correct_score: 10
+        },
+        // Decisão 5: Seguros
+        {
+            title: "Decisão 5/8: Seguros - O que priorizar?",
+            scenario: "Enquanto jovem adulto, que tipo de seguro deve ser priorizado, para além do obrigatório (saúde via SNS, ou do lar se arrendar/comprar)?",
+            options: [
+                { text: "A: Um seguro de saúde privado complementar ao SNS (cerca de 40€/mês).", score: 10, feedback: "Prioridade Racional: O seguro de saúde, apesar de existir o SNS, é crucial para acesso rápido e qualidade em áreas específicas, protegendo a sua maior 'riqueza': a saúde." },
+                { text: "B: Um seguro de vida elevado (cerca de 80€/mês), mesmo sem dependentes.", score: 0, feedback: "Decisão Fraca: Um seguro de vida é mais relevante quando há dependentes. O custo é elevado para a sua fase de vida." },
+                { text: "C: Não fazer qualquer seguro, assumindo que é um custo desnecessário.", score: 0, feedback: "Risco Elevado: Uma má gestão de risco, pois um acidente inesperado pode ter um impacto financeiro devastador." }
+            ],
+            correct_score: 10
+        },
+        // Decisão 6: Investimento de Risco
+        {
+            title: "Decisão 6/8: Investimento - Qual o 1º passo?",
+            scenario: "Após a Reserva de Emergência estabelecida (Decisão 3), sobram-lhe 100€ para investir. Qual a opção mais indicada para o seu primeiro investimento, a longo prazo?",
+            options: [
+                { text: "A: Investir tudo em criptomoedas de alto risco (prometem 50% de lucro rápido).", score: 0, feedback: "Risco Excessivo: Não é a abordagem correta para um primeiro investimento, pois o risco é demasiado elevado e as promessas de lucros rápidos são irrealistas." },
+                { text: "B: Subscrever Certificados de Aforro (título de dívida pública) que oferecem baixo risco e rentabilidade modesta.", score: 10, feedback: "Opção Ótima: Ideal para iniciantes. É um investimento seguro e líquido, que o familiariza com o mundo dos investimentos de forma responsável." },
+                { text: "C: Investir em ações de uma única empresa tecnológica (100€).", score: 5, feedback: "Risco Médio: Faltou diversificação! Investir todo o valor numa única ação expõe-o a um risco desnecessário e elevado." }
+            ],
+            correct_score: 10
+        },
+        // Decisão 7: Lazer e Orçamento
+        {
+            title: "Decisão 7/8: Lazer e Equilíbrio - Qual o Orçamento Ideal?",
+            scenario: "A sua vida social é importante. Quer ter um orçamento para Lazer e Saídas. Deve estabelecer um valor fixo ou gastar o que sobrar?",
+            options: [
+                { text: "A: Definir um teto mensal de 150€ (cerca de 11% do RML) para lazer e usá-lo sem o ultrapassar.", score: 10, feedback: "'Pague-se a si primeiro': O orçamento de lazer, quando fixo, evita gastos excessivos e garante que a poupança é prioritária." },
+                { text: "B: Gastar o que 'sobrar' no fim do mês (o método 'gastar e depois poupar').", score: 0, feedback: "Risco Elevado: Este método leva quase sempre a uma poupança nula. O lazer deve ser planeado, não um gasto residual." },
+                { text: "C: Usar o cartão de crédito para lazer, pagando tudo no mês seguinte.", score: 0, feedback: "Decisão Perigosa: Usar crédito para lazer é uma receita para a sobre-endividamento, que deve ser evitado a todo o custo." }
+            ],
+            correct_score: 10
+        },
+        // Decisão 8: Educação e Valorização Profissional
+        {
+            title: "Decisão 8/8: Valorização - Invisto em Formação?",
+            scenario: "Apareceu um curso de especialização (1000€) crucial para o seu futuro. Deve usá-lo ou manter o dinheiro poupado?",
+            options: [
+                { text: "A: Usar o dinheiro da sua Reserva de Emergência para pagar o curso.", score: 0, feedback: "Decisão Incorreta: A Reserva de Emergência é intocável. O curso, embora importante, deve ser financiado através da poupança de 'Educação'." },
+                { text: "B: Não fazer o curso, porque o dinheiro é para investir a longo prazo.", score: 5, feedback: "Perda de Oportunidade: A 'educação' é o melhor investimento a longo prazo. Deve encontrar uma forma de o financiar, como crédito de formação ou poupança específica." },
+                { text: "C: Fazer um crédito de formação (se disponível com juros baixos) ou criar uma poupança específica para o curso (e fazê-lo em 6 meses).", score: 10, feedback: "Opção Ótima: Prioriza o investimento em si mesmo, que tem o maior retorno a longo prazo, mas de forma orçamentalmente responsável." }
+            ],
+            correct_score: 10
+        }
+    ];
+
+    // --- FUNÇÕES DE LÓGICA DO JOGO ---
+
+    // Função para começar o jogo e o cronómetro
+    function startGame() {
+        document.getElementById('cover').style.display = 'none';
+        document.getElementById('game').style.display = 'block';
+        
+        // Iniciar o cronómetro
+        startTime = Date.now();
+        timerInterval = setInterval(updateTimer, 1000);
+
+        // Mostrar a primeira decisão
+        showDecision(currentStep);
+    }
+
+    // Função para atualizar o cronómetro
+    function updateTimer() {
+        const elapsedTime = Date.now() - startTime;
+        const totalSeconds = Math.floor(elapsedTime / 1000);
+        const minutes = String(Math.floor(totalSeconds / 60)).padStart(2, '0');
+        const seconds = String(totalSeconds % 60).padStart(2, '0');
+        document.getElementById('timer').textContent = `Tempo de Jogo: ${minutes}:${seconds}`;
+    }
+
+    // Função para mostrar a decisão atual
+    function showDecision(index) {
+        if (index >= NUM_DECISIONS) {
+            endGame();
+            return;
+        }
+
+        const decision = decisions[index];
+        let htmlContent = `<h2>${decision.title}</h2>`;
+        htmlContent += `<p><strong>Cenário:</strong> ${decision.scenario}</p>`;
+        htmlContent += `<div class="options">`;
+        
+        // CORREÇÃO: Usar um listener de evento em vez de onchange no HTML para ser mais robusto
+        decision.options.forEach((option, i) => {
+            htmlContent += `
+                <label>
+                    <input type="radio" name="decision-${index}" value="${option.score}" data-feedback="${option.feedback}" id="option-${index}-${i}">
+                    ${option.text}
+                </label>
+            `;
+        });
+        
+        htmlContent += `</div>`;
+        document.getElementById('current-decision').innerHTML = htmlContent;
+        document.getElementById('next-button').disabled = true; // Desabilita o botão até uma opção ser escolhida
+
+        // Adicionar o Event Listener para habilitar o botão
+        document.querySelectorAll(`input[name="decision-${index}"]`).forEach(radio => {
+            radio.addEventListener('change', enableNextButton);
+        });
+    }
+
+    // Função para habilitar o botão "Próxima Decisão"
+    function enableNextButton() {
+        // Verifica se pelo menos uma opção está selecionada na decisão atual
+        if (document.querySelector(`input[name="decision-${currentStep}"]:checked`)) {
+            document.getElementById('next-button').disabled = false;
+        }
+    }
+
+    // Função para passar para a próxima decisão
+    function nextDecision() {
+        const selectedOption = document.querySelector(`input[name="decision-${currentStep}"]:checked`);
+        
+        if (!selectedOption) {
+            alert("Por favor, selecione uma opção antes de avançar.");
+            return;
+        }
+
+        // 1. Registo da Pontuação
+        const score = parseInt(selectedOption.value);
+        const feedback = selectedOption.getAttribute('data-feedback');
+        totalScore += score;
+        
+        // Mostrar feedback imediato (opcional, pode remover se preferir feedback apenas no final)
+        alert(`A sua escolha rendeu-lhe ${score} pontos. \nFeedback: ${feedback}`);
+
+        // 2. Avançar no Jogo
+        currentStep++;
+        showDecision(currentStep);
+    }
+
+    // Função para terminar o jogo e mostrar resultados
+    function endGame() {
+        clearInterval(timerInterval);
+        const elapsedTime = Date.now() - startTime;
+        const totalSeconds = Math.floor(elapsedTime / 1000);
+        const minutes = String(Math.floor(totalSeconds / 60)).padStart(2, '0');
+        const seconds = String(totalSeconds % 60).padStart(2, '0');
+
+        document.getElementById('game').style.display = 'none';
+        document.getElementById('results').style.display = 'block';
+
+        // Mostrar resultados
+        document.getElementById('time-result').textContent = `${minutes}:${seconds}`;
+        document.getElementById('score-result').textContent = `${totalScore} pontos (Máx. ${NUM_DECISIONS * 10})`;
+        
+        // Mensagem Final
+        let finalMessage = "Resultado Final: ";
+        if (totalScore >= 70) { 
+            finalMessage += "Excelente Planeamento e Gestão!";
+        } else if (totalScore >= 50) {
+            finalMessage += "Bom Planeamento, com Margem para Melhoria.";
+        } else {
+            finalMessage += "É Necessário Reforçar a sua Literacia Financeira.";
+        }
+        
+        document.getElementById('final-score').textContent = finalMessage;
+        
+        console.log(`Jogo Concluído. Tempo: ${minutes}:${seconds}, Pontuação: ${totalScore}`);
+    }
+
+</script>
+
+</body>
+</html>

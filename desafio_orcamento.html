@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>O Desafio do Orçamento - Literacia Financeira</title>
+
+    <style>
+        /* --- CSS Básico para Estilo --- */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f9;
+            color: #333;
+            text-align: center;
+        }
+        .container {
+            width: 85%;
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 30px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+        }
+        h1 {
+            color: #0056b3;
+            margin-bottom: 5px;
+            font-size: 2.2em;
+        }
+        h2 {
+            color: #007bff;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+            margin-top: 30px;
+            font-size: 1.6em;
+        }
+        button {
+            background-color: #28a745;
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 5px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.1s;
+            margin-top: 20px;
+        }
+        button:hover {
+            background-color: #218838;
+            transform: translateY(-2px);
+        }
+        #game-area {
+            text-align: left;
+            margin-top: 20px;
+            display: none; /* Escondido até o jogo começar */
+        }
+        p {
+            line-height: 1.6;
+            margin: 10px 0;
+        }
+        #status {
+            background-color: #e9ecef;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            font-weight: bold;
+            color: #0056b3;
+        }
+        #options label {
+            display: block;
+            margin: 15px 0;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            transition: background-color 0.2s;
+            cursor: pointer;
+        }
+        #options label:hover {
+            background-color: #f0f8ff;
+        }
+        #options input[type="radio"] {
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container" id="cover-page">
+        <h1>O Desafio do Orçamento: Gerir para Vencer</h1>
+
+        <hr>
+
+        <h2>Literacia Financeira em Ação</h2>
+
+        <p>Bem-vindos, futuros economistas! Este jogo simula o vosso **primeiro ano financeiro como adultos**. Vão enfrentar **8 decisões** cruciais que vos obrigarão a aplicar os princípios de **planeamento e gestão orçamental**.</p>
+
+        <p>O objetivo é: tomar as **melhores 8 decisões** para acumular a maior **Pontuação Financeira**, no **menor tempo de jogo** total (o tempo que demoram a decidir). Cada segundo conta!</p>
+
+        <h2>O Cenário</h2>
+        <p>Acabaram o 12.º ano e mudaram-se para a vossa cidade universitária/de trabalho. Têm um **Rendimento Mensal Fixo** de **900€** e uma **reserva inicial** de **500€**.</p>
+
+        <button onclick="startGame()">Começar o Desafio!</button>
+    </div>
+
+    <div class="container" id="game-area">
+        <h2 id="decision-title">Decisão 1 de 8: Carregando...</h2>
+
+        <div id="status">
+            <p><strong>Rendimento Mensal:</strong> 900€ | <strong>Saldo Atual:</strong> <span id="current-saldo">0</span>€ | <strong>Pontuação:</strong> <span id="current-score">0</span> | <strong>Tempo Total:</strong> <span id="total-time">0</span>s</p>
+        </div>
+
+        <p id="decision-text">O texto da decisão irá aparecer aqui.</p>
+
+        <div id="options">
+            </div>
+    </div>
+
+    <script>
+        // --- JAVASCRIPT: LÓGICA DO JOGO ---
+
+        // Variáveis de Estado do Jogo
+        let saldo = 500; // Saldo inicial (€)
+        let score = 0;   // Pontuação inicial
+        let totalTime = 0; // Tempo total de jogo (em segundos)
+        let startTime; // Para medir o tempo de cada decisão
+        let currentDecision = 1; // Contador para a decisão atual
+
+        // Dados do Cenário
+        const RENDIMENTO_MENSAL = 900;
+        const NUM_DECISOES = 8;
+
+        // --- ESTRUTURA DAS 8 DECISÕES FINANCEIRAS ---
+        const decisionData = {
+            1: { // Decisão 1: Habitação
+                title: "Habitação",
+                text: "Tens 900€ de rendimento e precisas de morada. Qual é a tua escolha inicial? (Impacto: Despesa mensal fixa)",
+                options: {
+                    a: { text: "A) Quarto em Residência/Casa Partilhada: 250€/mês (inclui despesas).", saldoChange: -250, score: 30 },
+                    b: { text: "B) Apartamento T1 a dividir com um amigo: 400€/mês (c/despesas).", saldoChange: -400, score: 20 },
+                    c: { text: "C) Apartamento T0/Estúdio para ti sozinho: 550€/mês (c/despesas).", saldoChange: -550, score: 10 }
+                }
+            },
+            2: { // Decisão 2: Transportes
+                title: "Transportes",
+                text: "Como te vais deslocar pela cidade para a faculdade/trabalho? (Impacto: Despesa mensal fixa)",
+                options: {
+                    a: { text: "A) Passe mensal de Transportes Públicos (Sub-23): 30€/mês.", saldoChange: -30, score: 25 },
+                    b: { text: "B) Uso esporádico de TVDE/Táxi: Estimativa de 100€/mês.", saldoChange: -100, score: 15 },
+                    c: { text: "C) Comprar uma mota usada: 50€/mês (Combustível, seguro, manutenção).", saldoChange: -50, score: 10 }
+                }
+            },
+            3: { // Decisão 3: Fundo de Emergência
+                title: "Fundo de Emergência",
+                text: "Recebes um bónus inesperado de 200€. O que fazes com este dinheiro?",
+                options: {
+                    a: { text: "A) Depositar na conta poupança como 'Fundo de Emergência'. (Melhor Gestão de Risco)", saldoChange: +200, score: 40 },
+                    b: { text: "B) Comprar o novo videojogo e ir jantar fora. (Despesa imediata)", saldoChange: -50, score: 5 },
+                    c: { text: "C) Investir tudo em criptomoedas de alto risco. (Risco elevado)", saldoChange: +100, score: 15 }
+                }
+            },
+            4: { // Decisão 4: Alimentação
+                title: "Alimentação",
+                text: "Como geres a tua alimentação mensal, sabendo que tens pouco tempo?",
+                options: {
+                    a: { text: "A) Refeitório e cozinhar em casa: 150€/mês.", saldoChange: -150, score: 30 },
+                    b: { text: "B) Principalmente *take-away* e restaurantes: 350€/mês.", saldoChange: -350, score: 10 },
+                    c: { text: "C) Compras no supermercado e lanches rápidos: 200€/mês.", saldoChange: -200, score: 20 }
+                }
+            },
+            5: { // Decisão 5: Dívida
+                title: "Dívida - Crédito ao Consumo",
+                text: "O teu computador avariou e precisas de um novo (800€). Não tens dinheiro. O que fazes?",
+                options: {
+                    a: { text: "A) Pedir um *microcrédito* com juros de 20%: Pagarás 1000€.", saldoChange: -100, score: 5 },
+                    b: { text: "B) Pedir emprestado à família/amigo a juro zero: Pagarás 800€.", saldoChange: 0, score: 30 },
+                    c: { text: "C) Comprar um usado de 400€ e poupar para o resto. (Gestão mais sustentável)", saldoChange: -400, score: 25 }
+                }
+            },
+            6: { // Decisão 6: Lazer/Poupança
+                title: "Lazer vs. Poupança",
+                text: "Gostavas de ir a um festival de música (150€). A tua poupança está a 50€.",
+                options: {
+                    a: { text: "A) Ir e usar o cartão de crédito (gasto a crédito de 150€).", saldoChange: -50, score: 5 },
+                    b: { text: "B) Não ir, poupar o dinheiro e procurar lazer gratuito. (Foco na Poupança)", saldoChange: +50, score: 35 },
+                    c: { text: "C) Arranjar um trabalho temporário de fim de semana para pagar o bilhete e ir. (Gerar Renda Extra)", saldoChange: +50, score: 25 }
+                }
+            },
+            7: { // Decisão 7: Contratos
+                title: "Contratos de Serviço",
+                text: "O teu contrato de telecomunicações (40€/mês) termina. O que fazes?",
+                options: {
+                    a: { text: "A) Renovar automaticamente (40€/mês).", saldoChange: -40, score: 10 },
+                    b: { text: "B) Mudar para um pacote mais barato com o essencial (25€/mês).", saldoChange: -25, score: 30 },
+                    c: { text: "C) Mudar para o pacote mais rápido e completo (55€/mês).", saldoChange: -55, score: 5 }
+                }
+            },
+            8: { // Decisão 8: Investimento
+                title: "Primeiro Investimento",
+                text: "Tendo agora 150€ para investir, como o farias?",
+                options: {
+                    a: { text: "A) 50€ em Ações de baixo risco/ETF (Investimento a longo prazo).", saldoChange: +20, score: 35 },
+                    b: { text: "B) 150€ no Euromilhões (Risco altíssimo).", saldoChange: -150, score: 5 },
+                    c: { text: "C) Guardar debaixo do colchão (Sem crescimento).", saldoChange: 0, score: 15 }
+                }
+            }
+        };
+
+
+        // --- FUNÇÕES DE LÓGICA DO JOGO ---
+
+        function updateStatus() {
+            document.getElementById('current-saldo').textContent = saldo.toFixed(2);
+            document.getElementById('current-score').textContent = score;
+            document.getElementById('total-time').textContent = totalTime.toFixed(1);
+        }
+
+        function startGame() {
+            // Esconde a capa e mostra a área do jogo
+            document.getElementById('cover-page').style.display = 'none';
+            document.getElementById('game-area').style.display = 'block';
+
+            // Atualiza o display inicial com os valores base
+            updateStatus();
+            loadDecision(currentDecision);
+        }
+
+        function loadDecision(decNum) {
+            if (decNum > NUM_DECISOES) {
+                endGame();
+                return;
+            }
+
+            const data = decisionData[decNum];
+
+            // Atualiza o cabeçalho e texto
+            document.getElementById('decision-title').textContent = `Decisão ${decNum} de ${NUM_DECISOES}: ${data.title}`;
+            document.getElementById('decision-text').textContent = data.text;
+
+            // Constrói as opções dinamicamente
+            let optionsHTML = '';
+            for (const key in data.options) {
+                // O nome do input radio é agora 'd_N' para garantir unicidade
+                optionsHTML += `<label><input type="radio" name="d_${decNum}" value="${key}"> ${data.options[key].text} </label>`;
+            }
+            // O botão chama a função com o número da decisão
+            optionsHTML += `<button onclick="processDecision(${decNum})">Tomar Decisão ${decNum}</button>`;
+
+            document.getElementById('options').innerHTML = optionsHTML;
+
+            // Inicia o cronómetro para esta decisão
+            startTime = performance.now();
+        }
+
+        function processDecision(decNum) {
+            // 1. Calular o Tempo
+            const endTime = performance.now();
+            const decisionTime = (endTime - startTime) / 1000; // Tempo em segundos
+            
+
+            // 2. Obter a Decisão Escolhida (CORREÇÃO AQUI: Usa o nome 'd_N')
+            const selectedOption = document.querySelector(`input[name="d_${decNum}"]:checked`);
+
+            if (!selectedOption) {
+                // Se nenhuma opção for selecionada, alerta e não avança nem conta o tempo
+                alert("Por favor, selecione UMA opção antes de avançar.");
+                return;
+            }
+            
+            // Se a decisão for válida, adiciona o tempo
+            totalTime += decisionTime;
+
+            const choiceKey = selectedOption.value;
+            const data = decisionData[decNum].options[choiceKey];
+
+            // 3. Aplicar o Impacto
+            const saldoChange = data.saldoChange;
+            const scoreGained = data.score;
+
+            saldo += saldoChange;
+            score += scoreGained;
+
+            // 4. Feedback
+            alert(`Decisão ${decNum} - ${decisionData[decNum].title} tomada!\n\nTempo de Decisão: ${decisionTime.toFixed(1)}s\nPontuação Ganhada: +${scoreGained}\nImpacto no Saldo: ${saldoChange > 0 ? '+' : ''}${saldoChange}€`);
+
+            // 5. Avançar para a próxima decisão
+            currentDecision++;
+            updateStatus();
+            loadDecision(currentDecision);
+        }
+
+        function endGame() {
+            document.getElementById('game-area').innerHTML = `
+                <h2 style="color: #28a745;">FIM DO DESAFIO! Missão Cumprida!</h2>
+                <hr>
+                <p style="font-size: 1.2em;">Parabéns, completaram as 8 decisões financeiras cruciais.</p>
+
+                <div id="status" style="background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb;">
+                    <p><strong>Pontuação Financeira Final:</strong> <span style="font-size: 1.5em;">${score}</span> pontos.</p>
+                    <p><strong>Tempo Total de Jogo:</strong> <span style="font-size: 1.5em;">${totalTime.toFixed(1)}</span> segundos.</p>
+                    <p><strong>Saldo Final (Aproximado):</strong> <span style="font-size: 1.5em;">${saldo.toFixed(2)}</span>€.</p>
+                </div>
+
+                <h3>Critério de Ranking</h3>
+                <p>O sucesso é medido pela qualidade das decisões e pela eficiência. O *ranking* final baseia-se na **Maior Pontuação** e, em caso de empate, no **Menor Tempo**.</p>
+                <button onclick="window.location.reload()">Jogar Novamente</button>
+            `;
+        }
+    </script>
+
+</body>
+</html>

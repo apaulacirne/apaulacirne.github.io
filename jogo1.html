@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>O Desafio Orçamental - Jogo de Literacia Financeira</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f9;
+            color: #333;
+            text-align: center;
+        }
+        .container {
+            width: 80%;
+            max-width: 900px;
+            margin: 50px auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #0056b3;
+            border-bottom: 2px solid #0056b3;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        h2 {
+            color: #28a745;
+            margin-top: 30px;
+        }
+        p {
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+            margin-top: 20px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .tabela-inicial {
+            width: 100%;
+            margin: 20px 0;
+            border-collapse: collapse;
+            text-align: left;
+        }
+        .tabela-inicial th, .tabela-inicial td {
+            border: 1px solid #ddd;
+            padding: 10px;
+        }
+        .tabela-inicial th {
+            background-color: #f2f2f2;
+            color: #0056b3;
+        }
+        #game-area {
+            display: none; /* Esconde a área de jogo inicialmente */
+            text-align: left;
+        }
+        .decision-option {
+            background-color: #e9ecef;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            border: 1px solid #ced4da;
+        }
+        .decision-option:hover {
+            background-color: #dee2e6;
+        }
+        .option-button {
+            display: block;
+            width: 100%;
+            text-align: left;
+            background: none;
+            color: #333;
+            border: none;
+            padding: 0;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        #results-area {
+            display: none;
+        }
+        .highlight {
+            font-weight: bold;
+            color: #dc3545;
+        }
+        #timer {
+            font-size: 1.5em;
+            margin-bottom: 15px;
+            color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <div id="intro-area">
+        <h1>O Desafio Orçamental</h1>
+        <p><strong>Jogo Interativo de Literacia Financeira - Planeamento e Gestão de Orçamento</strong></p>
+        <hr>
+        <h2>Cenário: O Salto para a Independência</h2>
+        <p>Acabaste o 12.º ano. Decidiste mudar de cidade para estudar (ou trabalhar). Vais enfrentar o teu primeiro grande **desafio orçamental**: manter a estabilidade financeira e construir um futuro sólido com recursos limitados. A tua performance será avaliada pela **Melhor Pontuação Financeira Final (MPFF)** e pelo **Tempo** que demoras a tomar as decisões.</p>
+
+        <p class="highlight">O teu objetivo é simples: Máxima MPFF no Menor Tempo!</p>
+
+        <h3>Estado Financeiro Inicial</h3>
+        <table class="tabela-inicial">
+            <tr><th>Rubrica</th><th>Valor Inicial (€)</th></tr>
+            <tr><td>Poupança Inicial dos Pais</td><td>4.000,00</td></tr>
+            <tr><td>Crédito Habitação Jovem (Utilização Máxima)</td><td>20.000,00</td></tr>
+            <tr><td>Rendimento Mensal (Part-Time)</td><td>450,00</td></tr>
+            <tr><td>Despesas Fixas (Renda, Serviços, etc.)</td><td>-400,00 (Mensal)</td></tr>
+            <tr><td><strong>Capital Disponível para Decisões (1.º Mês)</strong></td><td><strong>4.050,00</strong></td></tr>
+        </table>
+        
+        <button onclick="startGame()">Começar o Desafio</button>
+    </div>
+
+    <div id="game-area">
+        <div id="timer">Tempo: 00:00</div>
+        <h2 id="question-title">Decisão 1 de 8: A Tomar...</h2>
+        <p id="question-text"></p>
+        
+        <div id="options-container">
+            </div>
+
+        <p><strong>Estado Atual:</strong> <span id="current-mpff">MPFF: 0</span> | <span id="current-balance">Capital Disponível: 4050,00 €</span></p>
+        <hr>
+        <p class="highlight" id="feedback-message"></p>
+    </div>
+
+    <div id="results-area">
+        <h1>FIM DO DESAFIO!</h1>
+        <h2>Os Teus Resultados Finais</h2>
+        <p><strong>Pontuação Financeira Final (MPFF):</strong> <span id="final-mpff" class="highlight"></span></p>
+        <p><strong>Tempo Total de Jogo:</strong> <span id="final-time" class="highlight"></span></p>
+        <p><strong>Capital Final:</strong> <span id="final-balance" class="highlight"></span></p>
+        <hr>
+        <h3>Análise da Performance:</h3>
+        <p id="performance-analysis"></p>
+        <button onclick="window.location.reload()">Recomeçar o Jogo</button>
+    </div>
+
+</div>
+
+<script>
+    // Variáveis Globais do Jogo
+    let currentQuestion = 0;
+    let mpffScore = 0;
+    let balance = 4050.00; // Capital Inicial
+    let startTime;
+    let timerInterval;
+
+    // Definição das 8 Decisões do Jogo
+    const decisions = [
+        {
+            title: "Decisão 1: Abertura de Conta Bancária",
+            text: "Precisas de uma conta para gerir as tuas finanças.",
+            options: [
+                { text: "A: Conta Jovem com isenção de comissões. (PD: +2 | Custo: 0€)", pd: 2, cost: 0 },
+                { text: "B: Conta Standard com comissões mensais de 5€ (prejuízo de 60€/ano). (PD: -1 | Custo: 0€)", pd: -1, cost: 0 }
+            ]
+        },
+        {
+            title: "Decisão 2: Transporte na Cidade",
+            text: "A cidade tem bons transportes públicos, mas pensas em ter o teu próprio carro.",
+            options: [
+                { text: "A: Passe Mensal + Bicicleta. (PD: +3 | Custo: 40€/mês)", pd: 3, cost: 40 },
+                { text: "B: Comprar um carro usado de 3.000€ (mais 100€/mês de combustível e manutenção). (PD: -1 | Custo: 3000)", pd: -1, cost: 3000 }
+            ]
+        },
+        {
+            title: "Decisão 3: Criação de Fundo de Emergência",
+            text: "O que fazer com uma parte do teu capital inicial?",
+            options: [
+                { text: "A: Colocar 1.000€ de lado numa conta poupança para despesas inesperadas (Fundo de Emergência). (PD: +3 | Custo: 1000)", pd: 3, cost: 1000 },
+                { text: "B: Não colocar nada de lado. O dinheiro está todo disponível para gastar. (PD: -2 | Custo: 0)", pd: -2, cost: 0 }
+            ]
+        },
+        {
+            title: "Decisão 4: Primeiro Investimento",
+            text: "Queres que o teu dinheiro comece a render um pouco mais do que na conta à ordem. Investir 500€.",
+            options: [
+                { text: "A: Certificado de Aforro (seguro, baixo rendimento: +1% no primeiro mês). (PD: +4 | Custo: 500)", pd: 4, cost: 500 },
+                { text: "B: Investir em Criptomoedas de alto risco (50% de probabilidade de perder tudo, 50% de ganhar muito). (PD: 0 | Custo: 500)", pd: 0, cost: 500 },
+                { text: "C: Não investir e deixar na conta à ordem. (PD: -1 | Custo: 0)", pd: -1, cost: 0 }
+            ]
+        },
+        {
+            title: "Decisão 5: Seguro de Saúde",
+            text: "O Serviço Nacional de Saúde (SNS) é bom, mas queres precaver-te contra possíveis urgências ou consultas especializadas.",
+            options: [
+                { text: "A: Adquirir um seguro de saúde base por 30€/mês. (PD: +2 | Custo: 30)", pd: 2, cost: 30 },
+                { text: "B: Confiar apenas no SNS. (PD: -1 | Custo: 0)", pd: -1, cost: 0 }
+            ]
+        },
+        {
+            title: "Decisão 6: Investimento na Formação",
+            text: "Queres investir em ti para melhorar o teu currículo e as tuas perspetivas futuras.",
+            options: [
+                { text: "A: Curso extra-curricular online relevante para a tua área (200€, pode gerar mais rendimento futuro). (PD: +3 | Custo: 200)", pd: 3, cost: 200 },
+                { text: "B: Priorizar sair com os amigos (100€ extra no orçamento mensal, diversão imediata). (PD: -1 | Custo: -100)", pd: -1, cost: -100 }
+            ]
+        },
+        {
+            title: "Decisão 7: Gestão da Dívida",
+            text: "Sobrou algum capital. O que fazer com 500€?",
+            options: [
+                { text: "A: Amortizar 500€ do Crédito Habitação Jovem (reduz juros a longo prazo). (PD: +2 | Custo: 500)", pd: 2, cost: 500 },
+                { text: "B: Comprar um gadget tecnológico novo (500€). (PD: -2 | Custo: 500)", pd: -2, cost: 500 }
+            ]
+        },
+        {
+            title: "Decisão 8: Começar a Pensar no Futuro",
+            text: "O futuro está longe, mas as vantagens de começar a poupar para a reforma são grandes (benefícios fiscais e juros compostos).",
+            options: [
+                { text: "A: Adquirir um PPR (Plano Poupança Reforma) e começar com 50€/mês. (PD: +5 | Custo: 50)", pd: 5, cost: 50 },
+                { text: "B: Adiar, a reforma é para os velhos, não é prioridade. (PD: -1 | Custo: 0)", pd: -1, cost: 0 }
+            ]
+        }
+    ];
+
+    // Funções do Jogo
+
+    function formatTime(ms) {
+        const totalSeconds = Math.floor(ms / 1000);
+        const minutes = String(Math.floor(totalSeconds / 60)).padStart(2, '0');
+        const seconds = String(totalSeconds % 60).padStart(2, '0');
+        return `${minutes}:${seconds}`;
+    }
+
+    function updateTimer() {
+        const elapsedTime = Date.now() - startTime;
+        document.getElementById('timer').textContent = `Tempo: ${formatTime(elapsedTime)}`;
+    }
+
+    function startGame() {
+        // Inicializa o jogo e o cronómetro
+        document.getElementById('intro-area').style.display = 'none';
+        document.getElementById('game-area').style.display = 'block';
+        
+        startTime = Date.now();
+        timerInterval = setInterval(updateTimer, 1000);
+
+        currentQuestion = 0;
+        mpffScore = 0;
+        balance = 4050.00; // Reset
+        
+        loadQuestion();
+        updateDisplay();
+    }
+
+    function updateDisplay() {
+        document.getElementById('current-mpff').textContent = `MPFF: ${mpffScore}`;
+        document.getElementById('current-balance').textContent = `Capital Disponível: ${balance.toFixed(2)} €`;
+    }
+
+    function loadQuestion() {
+        if (currentQuestion >= decisions.length) {
+            endGame();
+            return;
+        }
+
+        const decision = decisions[currentQuestion];
+        document.getElementById('question-title').textContent = `Decisão ${currentQuestion + 1} de 8: ${decision.title}`;
+        document.getElementById('question-text').textContent = decision.text;
+        document.getElementById('feedback-message').textContent = ""; // Limpa feedback anterior
+
+        const optionsContainer = document.getElementById('options-container');
+        optionsContainer.innerHTML = ''; // Limpa opções anteriores
+
+        decision.options.forEach((option, index) => {
+            const optionDiv = document.createElement('div');
+            optionDiv.className = 'decision-option';
+            optionDiv.innerHTML = `<button class="option-button" onclick="makeDecision(${index})">${option.text}</button>`;
+            optionsContainer.appendChild(optionDiv);
+        });
+    }
+
+    function makeDecision(optionIndex) {
+        if (currentQuestion >= decisions.length) return; // Segurança
+
+        const decision = decisions[currentQuestion];
+        const selectedOption = decision.options[optionIndex];
+
+        // 1. Atualiza a Pontuação e o Capital
+        mpffScore += selectedOption.pd;
+        balance -= selectedOption.cost;
+        
+        // Simulação de rendimento/perda na Decisão 4 (Investimento)
+        if (currentQuestion === 3) { // Se for a decisão de investimento
+            if (optionIndex === 0) { // Certificado de Aforro (+1% sobre os 500€)
+                balance += 500 * 0.01;
+                document.getElementById('feedback-message').textContent = "Bónus: Investimento em Certificados de Aforro rendeu 5,00€ (1% no 1.º mês).";
+            } else if (optionIndex === 1) { // Criptomoedas (Alto Risco)
+                if (Math.random() < 0.5) { // 50% de probabilidade de perder
+                    balance -= 500;
+                    document.getElementById('feedback-message').textContent = "Perca! O investimento em Criptomoedas revelou-se um fiasco. Perdeu 500€.";
+                } else { // 50% de probabilidade de ganhar muito (ex: 200%)
+                    balance += 1000;
+                    document.getElementById('feedback-message').textContent = "Sorte Grande! O investimento em Criptomoedas deu um retorno de 1.000€. Risco compensado!";
+                }
+            }
+        } else {
+            document.getElementById('feedback-message').textContent = `Decisão tomada: Pontuação de Decisão de ${selectedOption.pd}. Capital alterado em ${selectedOption.cost.toFixed(2)} €`;
+        }
+
+
+        // 2. Avança para a próxima pergunta
+        currentQuestion++;
+        updateDisplay();
+        loadQuestion();
+    }
+
+    function endGame() {
+        clearInterval(timerInterval);
+        const endTime = Date.now();
+        const finalTimeMs = endTime - startTime;
+
+        document.getElementById('game-area').style.display = 'none';
+        document.getElementById('results-area').style.display = 'block';
+
+        document.getElementById('final-mpff').textContent = mpffScore;
+        document.getElementById('final-time').textContent = formatTime(finalTimeMs);
+        document.getElementById('final-balance').textContent = balance.toFixed(2) + ' €';
+
+        let analysisText = "";
+        if (mpffScore >= 20) {
+            analysisText = "Excelente Performance! Demonstra uma forte literacia financeira e um elevado planeamento orçamental. És um(a) gestor(a) financeiro(a) nato(a)!";
+        } else if (mpffScore >= 10) {
+            analysisText = "Boa Performance. Tomaste decisões maioritariamente sensatas, com alguns pontos de melhoria na gestão de risco e poupança de longo prazo.";
+        } else {
+            analysisText = "Requer Atenção. O teu plano orçamental é muito arriscado ou pouco sustentável. É essencial rever os conceitos de Fundo de Emergência, Dívida e Investimento.";
+        }
+        document.getElementById('performance-analysis').textContent = analysisText;
+    }
+</script>
+
+</body>
+</html>

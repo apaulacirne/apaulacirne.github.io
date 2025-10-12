@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>O Desafio do Circuito Económico - Economia 11º Ano</title>
+    
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f4f9;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            background-color: #fff;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 800px;
+            text-align: center;
+        }
+        h1, h2 {
+            color: #007bff;
+        }
+        .cover-page, .game-area, .result-page {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .game-area {
+            text-align: left;
+        }
+        button {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.3s ease, transform 0.1s ease;
+            margin-top: 10px; 
+        }
+        button:hover {
+            background-color: #218838;
+            transform: translateY(-2px);
+        }
+        button:active {
+            transform: translateY(0);
+        }
+        .question-card {
+            border: 1px solid #ccc;
+            padding: 20px;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+            text-align: left;
+        }
+        .decision-button {
+            margin: 5px 0;
+            background-color: #007bff;
+            padding: 10px 20px;
+            width: 100%; 
+            display: block; 
+        }
+        .decision-button:hover {
+            background-color: #0056b3;
+        }
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            font-size: 1.2em;
+            margin-bottom: 20px;
+            padding: 10px;
+            border-bottom: 2px solid #ccc;
+        }
+        .hidden {
+            display: none;
+        }
+        #timer {
+            font-weight: bold;
+            color: #dc3545;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <div id="coverPage" class="cover-page">
+        <h1>O Desafio do Circuito Económico</h1>
+        <hr>
+        <h2>Economia A - 11.º Ano</h2>
+        <p>Bem-vindo(a) ao desafio que testa a sua compreensão sobre os **Agentes Económicos** e os **Fluxos** que estabelecem no **Circuito Económico** português.</p>
+        
+        <h3>O Cenário: O Cidadão/Agente Económico Proativo</h3>
+        <p>Imagine que é um novo agente económico no sistema, com a missão de tomar as melhores **12 decisões** para maximizar o seu impacto positivo na economia. Cada decisão correta ou economicamente mais vantajosa atribui-lhe pontos. O objetivo é obter a **soma das melhores decisões** (maior pontuação) no **menor tempo de jogo**.</p>
+        
+        <h3>Regras do Jogo:</h3>
+        <ul>
+            <li>**12 Decisões:** Terá de analisar 12 situações que envolvem Famílias, Empresas, Estado, Instituições Financeiras e o Resto do Mundo.</li>
+            <li>**Pontuação:** Cada decisão tem uma pontuação associada (0 a 10 pontos). O objetivo é somar o máximo de pontos.</li>
+            <li>**Tempo:** O tempo começa a contar no momento em que inicia o jogo.</li>
+            <li>**Vencedor:** Quem obtiver a melhor relação Pontos/Tempo.</li>
+        </ul>
+        
+        <button id="startButton">Começar o Desafio!</button>
+    </div>
+
+    <div id="gameArea" class="game-area hidden">
+        <div class="stats">
+            <p>Decisão: <span id="currentQuestionNumber">1</span> / 12</p>
+            <p>Pontuação: <span id="score">0</span></p>
+            <p>Tempo: <span id="timer">00:00</span></p>
+        </div>
+        
+        <div id="questionCard" class="question-card">
+            <h3 id="questionTitle"></h3>
+            <p id="questionText"></p>
+            <div id="optionsContainer">
+                </div>
+            <p id="feedback" style="font-weight: bold; color: green; margin-top: 15px;" class="hidden"></p>
+            <button id="nextButton" class="hidden">Próxima Decisão</button> 
+        </div>
+    </div>
+
+    <div id="resultPage" class="result-page hidden">
+        <h1>Resultados Finais</h1>
+        <p>Parabéns, completou o Desafio do Circuito Económico!</p>
+        <p>A sua **Pontuação Total** foi de: <span id="finalScore" style="color: #28a745; font-size: 1.5em; font-weight: bold;"></span> pontos.</p>
+        <p>O **Tempo de Jogo** foi de: <span id="finalTime" style="color: #dc3545; font-size: 1.5em; font-weight: bold;"></span>.</p>
+        <hr>
+        <h3>Análise do Desempenho</h3>
+        <p>O seu **Índice de Eficiência Económica (Pontos/Tempo)** é: <span id="efficiencyIndex" style="color: #007bff; font-size: 1.4em; font-weight: bold;"></span></p>
+        <p>Quanto maior o índice, mais eficiente foi nas suas decisões. Compare com os seus colegas!</p>
+        <button onclick="window.location.reload()">Jogar Novamente</button>
+    </div>
+
+</div>
+
+<script>
+// Variáveis do Jogo
+let currentQuestionIndex = 0;
+let score = 0;
+let startTime;
+let timerInterval;
+const totalQuestions = 12;
+
+// Estrutura das Decisões (Perguntas) - (Mantida para consistência)
+const questions = [
+    {
+        title: "Decisão 1: Famílias e o Rendimento",
+        text: "Acabou de receber 1000€ do seu salário (Recurso da Família). O que decide fazer com esta verba, considerando a poupança e o futuro?",
+        options: [
+            { text: "Depositar 800€ num Banco e consumir 200€ em bens essenciais.", points: 10, feedback: "Excelente! Forte **Poupança (IF)** e Consumo. Cria capacidade de financiamento e injeta capital no circuito financeiro." },
+            { text: "Gastar 900€ num telemóvel de última geração e guardar 100€ em casa.", points: 5, feedback: "Bom consumo, mas pouca poupança formal. O dinheiro guardado em casa (entouras) não entra no circuito financeiro para ser investido." },
+            { text: "Gastar os 1000€ numa viagem ao estrangeiro.", points: 2, feedback: "É um Emprego/Utilização (Consumo), mas não contribui para a poupança nacional (IF) nem para o investimento (ENF)." }
+        ],
+        agentFocus: "Famílias"
+    },
+    {
+        title: "Decisão 2: Empresas Não Financeiras e a Produção",
+        text: "É empresário e tem um excedente de capital. Qual o melhor investimento para o crescimento da sua Empresa Não Financeira (ENF)?",
+        options: [
+            { text: "Comprar novas máquinas e contratar mais trabalhadores.", points: 10, feedback: "Correto! **Investimento (FBCF)** - Aumenta a capacidade produtiva e gera rendimento para as famílias." },
+            { text: "Distribuir o excedente como lucros extra aos sócios.", points: 5, feedback: "É um Emprego, mas não é Investimento. Não contribui para o aumento da produção futura." },
+            { text: "Pagar antecipadamente as importações de matéria-prima.", points: 2, feedback: "É um Emprego/Fluxo Monetário para o Resto do Mundo, mas não melhora a sua capacidade produtiva interna." }
+        ],
+        agentFocus: "Empresas Não Financeiras"
+    },
+    {
+        title: "Decisão 3: Fluxos Reais e Monetários",
+        text: "A sua família paga a mensalidade do infantário privado do seu irmão. Qual a natureza e o sentido do fluxo real e monetário?",
+        options: [
+            { text: "Fluxo Real: Famílias → ENF (Serviço de ensino); Fluxo Monetário: Famílias → ENF (Pagamento).", points: 10, feedback: "Certo! As Famílias compram o serviço de ensino (real) e pagam (monetário) à Empresa Não Financeira." },
+            { text: "Fluxo Real: ENF → Famílias (Trabalho); Fluxo Monetário: Famílias → ENF (Salário).", points: 2, feedback: "Errado. O salário é um Recurso da Família, não o pagamento de um serviço de consumo." },
+            { text: "Fluxo Real: Estado → Famílias (Subsídio); Fluxo Monetário: Famílias → Estado (Imposto).", points: 0, feedback: "Errado. Não envolve o Estado nesta transação de consumo privado." }
+        ],
+        agentFocus: "Fluxos (Famílias/ENF)"
+    },
+    {
+        title: "Decisão 4: Instituições Financeiras (IF) e Empréstimos",
+        text: "O seu Banco aprova-lhe um crédito à habitação. Este fluxo constitui:",
+        options: [
+            { text: "Um Recurso para a Família e um Emprego para as Instituições Financeiras (IF).", points: 10, feedback: "Correto! O dinheiro do empréstimo entra no seu património (Recurso) e sai do património do Banco (Emprego)." },
+            { text: "Um Recurso para as IF e um Emprego para a Família.", points: 3, feedback: "Errado. O pagamento das prestações seria um Recurso para as IF, mas não a concessão do empréstimo." },
+            { text: "Um fluxo real (a casa) e um fluxo monetário (o dinheiro).", points: 0, feedback: "A casa é um bem que será transacionado entre a Família e a ENF (Construtora/Vendedor), não entre a Família e a IF." }
+        ],
+        agentFocus: "Instituições Financeiras"
+    },
+    {
+        title: "Decisão 5: O Papel do Estado (Administrações Públicas)",
+        text: "O Estado decide atribuir um subsídio a uma empresa para a ajudar a criar empregos. Este fluxo monetário é um:",
+        options: [
+            { text: "Emprego do Estado e um Recurso da Empresa Não Financeira (ENF).", points: 10, feedback: "Certo! O Estado despende o dinheiro (Emprego) e a empresa recebe (Recurso) para o seu financiamento." },
+            { text: "Recurso do Estado e um Emprego da ENF.", points: 0, feedback: "Errado. O Estado recebe impostos, não subsídios." },
+            { text: "Fluxo Real de bens e serviços do Estado.", points: 0, feedback: "É um fluxo monetário. O fluxo real seriam os bens e serviços públicos produzidos pelo Estado." }
+        ],
+        agentFocus: "Estado"
+    },
+    {
+        title: "Decisão 6: Resto do Mundo (RM) e Balança Comercial",
+        text: "A sua empresa exporta vinhos para o Brasil. O fluxo monetário proveniente desta transação constitui:",
+        options: [
+            { text: "Um Recurso da Empresa Não Financeira (ENF) e um Emprego do Resto do Mundo (RM).", points: 10, feedback: "Correto! O dinheiro das exportações 'entra' na empresa nacional (Recurso) e 'sai' do Resto do Mundo (Emprego)." },
+            { text: "Um Emprego da ENF e um Recurso do RM.", points: 0, feedback: "Errado. Seria o caso das importações." },
+            { text: "Um fluxo real do RM para a ENF.", points: 0, feedback: "O fluxo real são os vinhos (bens) que saem de Portugal." }
+        ],
+        agentFocus: "Resto do Mundo"
+    },
+    {
+        title: "Decisão 7: Fluxos entre Famílias e Estado",
+        text: "O pagamento do IRS (Imposto sobre o Rendimento de Pessoas Singulares) pelas Famílias é um:",
+        options: [
+            { text: "Emprego das Famílias e um Recurso do Estado.", points: 10, feedback: "Correto! O imposto é uma despesa obrigatória da Família (Emprego) e a principal fonte de receita do Estado (Recurso)." },
+            { text: "Recurso das Famílias e um Emprego do Estado.", points: 0, feedback: "Errado. Seria o caso das prestações sociais (subsídios)." },
+            { text: "Fluxo Real não compensado.", points: 2, feedback: "É um fluxo monetário, mas sim, é não compensado (sem contrapartida direta imediata)." }
+        ],
+        agentFocus: "Famílias e Estado"
+    },
+    {
+        title: "Decisão 8: Recurso ou Emprego (IF)",
+        text: "Um empresário pede um crédito para investir. O reembolso mensal das prestações à Instituição Financeira (Banco) é um:",
+        options: [
+            { text: "Recurso para a IF (entrada de dinheiro).", points: 10, feedback: "Certo! O reembolso do empréstimo constitui um Recurso (entrada de dinheiro) para o Banco." },
+            { text: "Emprego para a IF (saída de dinheiro).", points: 0, feedback: "Errado. A concessão do empréstimo inicial seria o Emprego." },
+            { text: "Fluxo real do dinheiro.", points: 0, feedback: "O dinheiro é sempre um fluxo monetário." }
+        ],
+        agentFocus: "Instituições Financeiras"
+    },
+    {
+        title: "Decisão 9: Investimento e Financiamento",
+        text: "Uma ENF usa os lucros do ano anterior para expandir a fábrica. Esta forma de financiamento chama-se:",
+        options: [
+            { text: "Autofinanciamento.", points: 10, feedback: "Correto! Uso de capitais próprios gerados pela atividade da empresa." },
+            { text: "Financiamento externo (IF).", points: 0, feedback: "Errado. O financiamento externo seria recorrer a um empréstimo bancário ou emitir ações." },
+            { text: "Financiamento pelo Estado.", points: 2, feedback: "O Estado pode dar subsídios (financiamento), mas neste caso o capital é gerado internamente." }
+        ],
+        agentFocus: "Empresas Não Financeiras"
+    },
+    {
+        title: "Decisão 10: Capacidade/Necessidade de Financiamento",
+        text: "Uma economia (agente) tem Recursos < Empregos. O que é que isto indica e qual a solução mais comum?",
+        options: [
+            { text: "Necessidade de Financiamento. Solução: Endividamento (pedir empréstimo) ou entrada de capital estrangeiro.", points: 10, feedback: "Excelente! Quando as utilizações são superiores aos recursos, a economia precisa de financiamento, ou seja, endividamento." },
+            { text: "Capacidade de Financiamento. Solução: Poupança excessiva.", points: 0, feedback: "Errado. A capacidade de financiamento ocorre quando Recursos > Empregos." },
+            { text: "Equilíbrio Económico. Solução: Congelamento de despesa.", points: 0, feedback: "Errado. O equilíbrio é quando Recursos = Empregos." }
+        ],
+        agentFocus: "Geral"
+    },
+    {
+        title: "Decisão 11: Relação Resto do Mundo (RM)",
+        text: "O João, emigrante em França, envia dinheiro para a sua família em Portugal (Remessas de Emigrantes). Este fluxo é:",
+        options: [
+            { text: "Um Recurso para as Famílias nacionais e um Emprego para o Resto do Mundo.", points: 10, feedback: "Correto! O dinheiro entra no país (Recurso) e é uma saída para o Resto do Mundo (Emprego do RM)." },
+            { text: "Uma Exportação de bens e serviços.", points: 0, feedback: "Errado. As remessas são transferências unilaterais (rendimentos) e não exportações." },
+            { text: "Um Emprego das Famílias e um Recurso do RM.", points: 0, feedback: "Errado. Seria o caso inverso (enviar dinheiro para o estrangeiro)." }
+        ],
+        agentFocus: "Resto do Mundo e Famílias"
+    },
+    {
+        title: "Decisão 12: Funções Principais dos Agentes",
+        text: "Qual dos seguintes pares Agente Económico/Função Principal está corretamente associado?",
+        options: [
+            { text: "Empresas Não Financeiras: Produzir bens e serviços não financeiros.", points: 10, feedback: "Correto! É a função central das ENF." },
+            { text: "Famílias: Financiar a economia.", points: 3, feedback: "A sua principal função é o Consumo. Financiam a economia secundariamente, através da poupança." },
+            { text: "Estado: Consumir bens e serviços.", points: 3, feedback: "A sua principal função é a Redistribuição do Rendimento e satisfação de necessidades coletivas (Produção de serviços públicos não mercantis)." }
+        ],
+        agentFocus: "Geral"
+    }
+];
+
+// Funções do Jogo
+
+/**
+ * Implementa o algoritmo de Fisher-Yates para baralhar um array de forma eficiente.
+ * @param {Array} array - O array a ser baralhado.
+ */
+function shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]]; // Troca elementos
+    }
+}
+
+/**
+ * Inicia o jogo, esconde a capa e mostra a área de jogo.
+ */
+function startGame() {
+    document.getElementById('coverPage').classList.add('hidden');
+    document.getElementById('gameArea').classList.remove('hidden');
+    
+    // Inicia o cronómetro
+    startTime = Date.now();
+    timerInterval = setInterval(updateTimer, 1000);
+    
+    loadQuestion();
+}
+
+/**
+ * Atualiza o cronómetro a cada segundo.
+ */
+function updateTimer() {
+    const elapsed = Date.now() - startTime;
+    const totalSeconds = Math.floor(elapsed / 1000);
+    const minutes = String(Math.floor(totalSeconds / 60)).padStart(2, '0');
+    const seconds = String(totalSeconds % 60).padStart(2, '0');
+    document.getElementById('timer').textContent = `${minutes}:${seconds}`;
+}
+
+/**
+ * Carrega a próxima questão/decisão no ecrã.
+ */
+function loadQuestion() {
+    if (currentQuestionIndex >= totalQuestions) {
+        endGame();
+        return;
+    }
+
+    const question = questions[currentQuestionIndex];
+    
+    // Oculta elementos de feedback e o botão de Próxima Decisão
+    document.getElementById('feedback').classList.add('hidden');
+    document.getElementById('nextButton').classList.add('hidden');
+
+    // Atualiza estatísticas
+    document.getElementById('currentQuestionNumber').textContent = currentQuestionIndex + 1;
+    
+    // Atualiza conteúdo da pergunta
+    document.getElementById('questionTitle').textContent = `Agente em Foco: ${question.agentFocus || 'Geral'}`;
+    document.getElementById('questionText').textContent = question.text;
+
+    // APLICAÇÃO DO SHUFFLE: Baralha as opções antes de as mostrar
+    shuffleArray(question.options);
+
+    // Criar botões de opção
+    const optionsContainer = document.getElementById('optionsContainer');
+    optionsContainer.innerHTML = '';
+    
+    question.options.forEach((option, index) => {
+        const button = document.createElement('button');
+        button.textContent = option.text;
+        button.classList.add('decision-button');
+        button.onclick = () => handleDecision(option); // Passa a opção completa
+        optionsContainer.appendChild(button);
+    });
+}
+
+/**
+ * Lida com a decisão do jogador.
+ * @param {Object} selectedOption - O objeto da opção escolhida.
+ */
+function handleDecision(selectedOption) {
+    const decision = selectedOption;
+    
+    // 1. Desativar botões para impedir múltiplas escolhas
+    const buttons = document.querySelectorAll('.decision-button');
+    buttons.forEach(button => {
+        button.disabled = true;
+        
+        // Destacar a opção escolhida
+        if (button.textContent === decision.text) {
+             button.style.backgroundColor = decision.points === 10 ? '#28a745' : '#ffc107'; // Verde para 10 pontos (máximo)
+             button.style.color = decision.points === 10 ? 'white' : '#333';
+        }
+    });
+
+    // 2. Atualizar Pontuação
+    score += decision.points;
+    document.getElementById('score').textContent = score;
+
+    // 3. Mostrar Feedback
+    const feedbackElement = document.getElementById('feedback');
+    feedbackElement.textContent = `Pontos: +${decision.points} | Feedback: ${decision.feedback}`;
+    feedbackElement.style.color = decision.points === 10 ? '#28a745' : decision.points >= 5 ? '#ffc107' : '#dc3545';
+    feedbackElement.classList.remove('hidden');
+
+    // 4. Mostrar botão de Próxima Decisão para avançar
+    document.getElementById('nextButton').classList.remove('hidden'); 
+}
+
+/**
+ * Avança para a próxima questão.
+ */
+function nextQuestion() {
+    currentQuestionIndex++;
+    loadQuestion();
+}
+
+/**
+ * Termina o jogo e mostra os resultados.
+ */
+function endGame() {
+    // Para o cronómetro
+    clearInterval(timerInterval);
+    const endTime = Date.now();
+    const totalTimeMs = endTime - startTime;
+    const totalSeconds = Math.floor(totalTimeMs / 1000);
+    const minutes = String(Math.floor(totalSeconds / 60)).padStart(2, '0');
+    const seconds = String(totalSeconds % 60).padStart(2, '0');
+
+    // Cálculo do Índice de Eficiência
+    const efficiencyIndex = (score / (totalSeconds + 1)).toFixed(2); 
+
+    // Esconde a área de jogo e mostra os resultados
+    document.getElementById('gameArea').classList.add('hidden');
+    document.getElementById('resultPage').classList.remove('hidden');
+    
+    // Preenche a página de resultados
+    document.getElementById('finalScore').textContent = score;
+    document.getElementById('finalTime').textContent = `${minutes} minutos e ${seconds} segundos`;
+    document.getElementById('efficiencyIndex').textContent = efficiencyIndex;
+}
+
+// Garante que o JavaScript se liga aos botões corretamente (correção da iteração anterior)
+document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('startButton').addEventListener('click', startGame);
+    document.getElementById('nextButton').addEventListener('click', nextQuestion);
+});
+</script>
+
+</body>
+</html>
